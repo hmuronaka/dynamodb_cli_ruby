@@ -91,7 +91,7 @@ class DynamoDBTable
 
   def to_s
     strs = self.class.fields.map do |key|
-      "\t#{key}: #{self[key].to_s}",
+      "\t#{key}: #{self[key].to_s}"
     end.join("\n")
     strs =<<EOS
 {

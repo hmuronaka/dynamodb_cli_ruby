@@ -7,42 +7,38 @@ module DynamoDBOperation
   #      :and
   #       expr(:FileID, :eq, {fileID: "MyFileID"}))
   #  return [ "UserID = :userID AND FileID = :fileID", {':userID' => "MyValue", ':fileID' => 'MyFileID'}]
-  def expr(left_operand, operation, right_operand)
+  def expr(left_expr, operation, right_expr)
     lambda { 
-      operation_str = string_from_operation(operation)
-
       left = nil
       values = {}
-      case left_operand
+      case left_expr
       when Symbol, String
-        left = left_operand
+        left = left_expr
       else #lambda
-        left, values = left_operand.call
+        left, values = left_expr.call
       end
 
       right = nil
       right_values = {}
-      case right_operand
+      case right_expr
       when Hash
-        right = ":#{right_operand.keys[0]}"
-        right_values = {":#{right_operand.keys[0]}" => right_operand.values[0]}
+        right = ":#{right_expr.keys[0]}"
+        right_values = {":#{right_expr.keys[0]}" => right_expr.values[0]}
       else #lambda
-        right, right_values = right_operand.call
+        right, right_values = right_expr.call
       end
       values.merge!(right_values)
 
-      ["#{left.to_s} #{operation_str} #{right.to_s}", values]}
+      ["#{left.to_s} #{operation} #{right.to_s}", values]}
   end
 
-  private
-  def string_from_operation(operation)
-    case operation
-    when :eq
-      return "="
-    when :and
-      return "AND"
+  # dynamo_eq(:UserID, {userID: "MyValue"})
+  #
+  # dynamo_and( dynamo_eq(:UserID, {userID: "MyValue"}),
+  #             dynamo_eq(:fileID, {fileID: "MyFileID"}) )
+  {dynamo_eq: '=', dynamo_and: 'AND'}.each do |name, operator|
+    define_method(name.to_s) do |left_expr, right_expr|
+      expr(left_expr, operator, right_expr)
     end
   end
-
 end
-
