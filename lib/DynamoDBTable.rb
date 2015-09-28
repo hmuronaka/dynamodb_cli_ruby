@@ -89,14 +89,25 @@ class DynamoDBTable
     self.send("#{key.to_s}=", value)
   end
 
+  def to_header_s
+    strs = self.class.fields.map do |key|
+      key
+    end.join(', ')
+  end
+
   def to_s
     strs = self.class.fields.map do |key|
-      "\t#{key}: #{self[key].to_s}"
-    end.join("\n")
-    strs =<<EOS
-{
-#{strs}
-}
-EOS
+      self[key].to_s
+    end.join(', ')
   end
+
+#     strs = self.class.fields.map do |key|
+#       "\t#{key}: #{self[key].to_s}"
+#     end.join("\n")
+#     strs =<<EOS
+# {
+# #{strs}
+# }
+# EOS
+#   end
 end
